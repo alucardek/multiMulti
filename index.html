@@ -1,0 +1,29 @@
+<!doctype html>
+
+<html>
+	<head>
+		<title>Socket.IO multi</title>
+
+	</head>
+
+	<body>
+		<h1>Hello index</h1>
+		<p>Navigate to <a id="gameLink" href="http://192.168.2.7:8080/">ERROR</a> with your mobile phone.</p>
+	   <div id="wrapper">
+	   </div>
+	</body>
+</html>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+	var roomId = 'test';
+	var baseURL = "http://192.168.2.7";
+
+	var socket = io.connect(baseURL);
+	var roomURL = baseURL+":8080/mobile.html?id="+roomId;
+  	socket.emit('new room', { room: roomId});
+
+  	$('#gameLink').attr("href", roomURL).text(roomURL);
+</script>
