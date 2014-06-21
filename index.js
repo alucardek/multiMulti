@@ -1,5 +1,8 @@
 var PORT = 8000;
-var moblink = ":" + PORT + "/mobile.html?id=test";
+var tempid = 'test';
+//var moblink = "/mobile.html?id=" + tempid;
+//moblink = "/mobile.html?id=test";
+
 var http = require('http'),
     fs = require('fs'),
     server = http.createServer(function(req, res) {
@@ -22,21 +25,22 @@ var http = require('http'),
             console.log('multiMulti.goto_page page_name page_count');
         } else if (req.url === '/blank') {
             console.log('multiMulti.toggle_blank_screen');
-        } */
+        } 
 
         else if (req.url === moblink) {
-            console.log('mobile');
-            /*
-            var file = 'mobile.html';
-            var stat = fs.statSync(file);
-            var stream = fs.createReadStream(file);
-            res.writeHead(200, { 'Content-Type': 'text/html',
+          console.log("routes on mobile: " + moblink)
+          var file = 'mobile.html';
+          var stat = fs.statSync(file);
+          var stream = fs.createReadStream(file);
+          res.writeHead(200, { 'Content-Type': 'text/html',
                                  'Content-Length': stat.size });
-            stream.pipe(res);
+          stream.pipe(res);
 
-            return;
-            */
-        } else if (req.url == '/mobile?id=test') {
+          return;   
+
+        } else {
+          console.log('problem ' + moblink);
+        }*/else if (req.url == '/mobile') {
           var file = 'mobile.html';
           var stat = fs.statSync(file);
           var stream = fs.createReadStream(file);
@@ -69,8 +73,6 @@ function room(roomSocket, roomId){
 };
 
  
-server.listen(PORT);
- 
 // Helper function: return the first non-loopback IPv4 address
 function getLocalIp() {
     function startsWith(str1, str2) {
@@ -99,7 +101,20 @@ io.sockets.on('connection', function (socket) {
 
   socket.on("new room", function(data){
     rooms.push(new room(socket, data.room));
-    console.log('new room created');
+
+
+    var desktopRoom = null;
+    for(var i = 0; i < rooms.length; i++){
+      if(rooms[i].roomId == data.room){
+        desktopRoom = i;
+      }
+    }
+    if(desktopRoom !== null){
+      console.log('new room created; room id: ' + rooms[desktopRoom].roomId);
+
+    }
+
+    //moblink = ":" + PORT + "/mobile.html?id=" + rooms[desktopRoom].roomId;
   });
 
   socket.on("connect mobile", function(data, fn){
@@ -111,11 +126,17 @@ io.sockets.on('connection', function (socket) {
         desktopRoom = i;
       }
     }
+
+    console.log("mobile is in room: " + desktopRoom);
+
+    
     if(desktopRoom !== null){
       rooms[desktopRoom].mobileSockets.push(socket);
+      /*
       socket.set('roomi', desktopRoom, function(){}) 
       fn({registered: true});
       rooms[socket.store.data.roomi].roomSocket.emit('add user', socket.id, data);
+      */
     }else{
       fn({registered: false, error: "No live desktop connection found"});
     }
@@ -140,7 +161,7 @@ io.sockets.on('connection', function (socket) {
 
   //When a user disconnects
   socket.on("disconnect", function(){
-    console.log(rooms.length);
+    console.log("disconnect. rooms length: " + rooms.length);
     var destroyThis = null;
 
     if(typeof socket.store.data.roomi == 'undefined'){
@@ -165,7 +186,7 @@ io.sockets.on('connection', function (socket) {
 });
 
 
-
+server.listen(PORT);
 
 /*
 var app = require('express')();

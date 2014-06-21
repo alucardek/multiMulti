@@ -1,23 +1,28 @@
 <!doctype html>
 
 <html>
-	<head>
-		<title>Socket.IO multi</title>
+  <head>
+    <title>Socket.IO multi</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
-      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
+
+      #qrcode{border: 1px black solid; width:100px; height:100px; margin-top:15px; }
     </style>
-	</head>
+
+  </head>
 
 	<body>
 		<h1>Hello index</h1>
 		<p>Navigate to <a id="gameLink" href="http://192.168.1.100/:8000/">ERROR</a> with your mobile phone.</p>
+    
+    <div id="qrcode"></div>
 	   <div id="wrapper">
 	   </div>
 
@@ -26,36 +31,58 @@
 </html>
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
-
+<script type="text/javascript" src="plugins/qrcode.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script>
-	var roomId = 'test';
-	var baseURL = "http://192.168.1.100/";
+/*
+var qrcode = new QRCode(document.getElementById("qrcode"), {
+  width : 100,
+  height : 100
+}); 
+*/
+function randomString() {
+  var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
+  var string_length = 1;
+  var randomstring = '';
+  for (var i=0; i<string_length; i++) {
+    var rnum = Math.floor(Math.random() * chars.length);
+  randomstring += chars.substring(rnum,rnum+1);
+  }
+  return randomstring;
+}
 
-	var socket = io.connect(baseURL);
-	var roomURL = baseURL+":8000/mobile.html?id="+roomId;
-  	socket.emit('new room', { room: roomId});
+var roomId = randomString();
+roomId = 'test';
+var baseURL = "http://192.168.1.100/";
+var roomURL = baseURL+":8000/mobile.html?id="+roomId;
 
-  	$('#gameLink').attr("href", roomURL).text(roomURL);
+$(document).ready(function() {
+  //qrcode.makeCode(roomURL);
+
+  var socket = io.connect(baseURL);
+
+  socket.emit('new room', { room: roomId});
+
+  $('#gameLink').attr("href", roomURL).text(roomURL);
 
 
-socket.on('chat message', function(msg){
-    $('#messages').append($('<li>').text(msg));
+  socket.on('add user', function(socketID, data){
+      players.push(new player(socketID));
   });
 
-  	/*
-$(document).ready(function() {
-  $.ajax({
-      // setup the server address
-        url : 'http://example:8000/',
-        success : function(response) {
-          // on success
-          alert(response);
-    },
-        error : function() {
-          // on error
+  socket.on('remove user', function(socketID){
+      var destroyThis = null;
+      for(var i in players){
+        if(players[i].id == socketID){
+          destroyThis = i;
         }
-    });
-});*/
+      }
+      if(destroyThis !== null){ players.splice(destroyThis, 1);}
+  });
+
+  socket.on('chat message', function(msg){
+      $('#messages').append($('<li>').text(msg));
+  });
+});
 
 </script>
